@@ -1,11 +1,15 @@
 use std::collections::HashMap;
 
-#[derive(Debug)]
+use rustler::{Env, NifStruct, ResourceArc};
+#[derive(NifStruct)]
+#[module = "BoyerMoore.Implemenations.Nif.BadMatchTable"]
 struct BadMatchTable {
     mapping: HashMap<u8, usize>,
     size: usize,
 }
 
+#[derive(NifStruct)]
+#[module = "BoyerMoore.Implemenations.Nif.Pattern"]
 struct Pattern {
     match_table: BadMatchTable,
     pattern_chars: Vec<u8>,
@@ -60,12 +64,32 @@ impl<'a> Pattern {
     }
 }
 
+pub fn on_load(env: Env, _: rustler::Term) -> bool {
+    rustler::resource!(Pattern, env);
+    true
+}
+
 #[rustler::nif]
 fn contains(haystack: &str, needle: &str) -> bool {
     let pattern = Pattern::compile(needle);
-    let starting_index = pattern.size - 1;
+    do_contains(haystack, &pattern)
+}
+
+#[rustler::nif]
+fn contains_compiled(haystack: &str, pattern: ResourceArc<Pattern>) -> bool {
+    let needle: &Pattern = &pattern;
+    do_contains(haystack, needle)
+}
+
+#[rustler::nif]
+fn compile(pattern: &str) -> ResourceArc<Pattern> {
+    ResourceArc::new(Pattern::compile(pattern))
+}
+
+fn do_contains(haystack: &str, needle: &Pattern) -> bool {
+    let starting_index = needle.size - 1;
     let haystack_chars = haystack.bytes().collect::<Vec<_>>();
-    contains_pattern(&haystack_chars, &pattern, starting_index)
+    contains_pattern(&haystack_chars, needle, starting_index)
 }
 
 fn contains_pattern(haystack: &Vec<u8>, pattern: &Pattern, starting_index: usize) -> bool {
@@ -103,4 +127,8 @@ fn detect_pattern<'a>(
     }
 }
 
-rustler::init!("Elixir.BoyerMoore.Implementations.Nif", [contains]);
+rustler::init!(
+    "Elixir.BoyerMoore.Implementations.Nif",
+    [contains, compile, contains_compiled],
+    load = on_load
+);
