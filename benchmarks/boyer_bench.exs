@@ -7,7 +7,8 @@ Proin vel neque et mi convallis semper. Proin lacus elit, dignissim sit amet max
 """
 
 short_pattern = "ligula"
-
+compiled_short_pattern = BoyerMoore.Implementations.Nif.compile(short_pattern)
+compiled_pattern = BoyerMoore.Implementations.Nif.compile(pattern)
 
 Benchee.run(
   %{
@@ -22,6 +23,12 @@ Benchee.run(
     "String.contains?"=> fn %{corpus: corpus, pattern: pattern} ->
       String.contains?(corpus, pattern)
     end,
+
+    "Nif(precompiled)" =>  fn %{corpus: corpus, pattern: ^short_pattern} ->
+      BoyerMoore.Implementations.Nif.contains?(corpus, compiled_short_pattern)
+      %{corpus: corpus, pattern: ^pattern} ->
+        BoyerMoore.Implementations.Nif.contains?(corpus, compiled_pattern)
+    end
 
   },
   inputs: %{

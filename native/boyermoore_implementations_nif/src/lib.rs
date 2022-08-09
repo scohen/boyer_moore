@@ -55,12 +55,12 @@ impl<'a> Pattern {
         }
     }
 
-    fn at(&'a self, i: usize) -> u8 {
-        *self.pattern_chars.get(i).unwrap()
-    }
-
     fn skip_for(&'a self, c: u8) -> usize {
         self.match_table.get(c)
+    }
+
+    fn at(&'a self, i: usize) -> u8 {
+        *self.pattern_chars.get(i).unwrap()
     }
 }
 
@@ -77,8 +77,7 @@ fn contains(haystack: &str, needle: &str) -> bool {
 
 #[rustler::nif]
 fn contains_compiled(haystack: &str, pattern: ResourceArc<Pattern>) -> bool {
-    let needle: &Pattern = &pattern;
-    do_contains(haystack, needle)
+    do_contains(haystack, &pattern)
 }
 
 #[rustler::nif]
