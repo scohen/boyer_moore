@@ -64,7 +64,7 @@ impl<'a> Pattern {
     }
 }
 
-pub fn on_load(env: Env, _: rustler::Term) -> bool {
+pub fn load(env: Env, _: rustler::Term) -> bool {
     rustler::resource!(Pattern, env);
     true
 }
@@ -129,5 +129,5 @@ fn detect_pattern<'a>(
 rustler::init!(
     "Elixir.BoyerMoore.Implementations.Nif",
     [contains, compile, contains_compiled],
-    load = on_load
+    load = load
 );
